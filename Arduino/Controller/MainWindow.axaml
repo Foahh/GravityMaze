@@ -1,0 +1,228 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Controller"
+        mc:Ignorable="d"
+        d:DesignWidth="520" d:DesignHeight="680"
+        x:Class="Controller.MainWindow"
+        Title="Maze Controller"
+
+        CanResize="False"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterScreen"
+        x:DataType="local:MainWindowViewModel">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20" MinWidth="480">
+            <!-- Connection Card -->
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock Classes="header" Text="📡 Connection" />
+
+                    <!-- Target settings row -->
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,12">
+                        <local:LabeledControl Grid.Column="0" Label="Target Host">
+                            <TextBox Text="{Binding TargetHost}" />
+                        </local:LabeledControl>
+
+                        <TextBlock Grid.Column="1" Text=":" VerticalAlignment="Bottom" Margin="8,0,8,8"
+                                   Foreground="#eaeaea" />
+
+                        <local:LabeledControl Grid.Column="2" Label="Port">
+                            <NumericUpDown Value="{Binding TargetPort}"
+                                           Minimum="1"
+                                           Maximum="65535"
+                                           MinWidth="90"
+                                           ShowButtonSpinner="False"
+                                           FormatString="0" />
+                        </local:LabeledControl>
+
+                        <Button Grid.Column="3"
+                                Classes="secondary"
+                                Content="Update"
+                                Command="{Binding UpdateTargetCommand}"
+                                VerticalAlignment="Bottom"
+                                Margin="12,0,0,0" />
+                    </Grid>
+
+                    <!-- Arduino status row -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="Arduino:" Margin="0,0,12,0" />
+                            <TextBlock Text="{Binding ArduinoStatus}"
+                                       Foreground="#ffc107"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Classes="secondary"
+                                Content="{Binding ArduinoButtonText}"
+                                Command="{Binding ToggleArduinoCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Quick Presets Card -->
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock Classes="header" Text="⚡ Quick Presets" />
+                    <!-- Disc Presets Row -->
+                    <ItemsControl ItemsSource="{Binding DiscPresets}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}"
+                                        Command="{Binding $parent[ItemsControl].((local:MainWindowViewModel)DataContext).ApplyPresetCommand}"
+                                        CommandParameter="{Binding}"
+                                        HorizontalContentAlignment="Center"
+                                        MinWidth="100"
+                                        Classes="preset" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!-- Cube Presets Row -->
+                    <ItemsControl ItemsSource="{Binding CubePresets}" Margin="0,8,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}"
+                                        Command="{Binding $parent[ItemsControl].((local:MainWindowViewModel)DataContext).ApplyPresetCommand}"
+                                        CommandParameter="{Binding}"
+                                        HorizontalContentAlignment="Center"
+                                        MinWidth="100"
+                                        Classes="preset" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Maze Settings Card -->
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock Classes="header" Text="🏗️ Maze Settings" />
+
+                    <!-- Row 1: Shape and Grid Size -->
+                    <Grid ColumnDefinitions="*,*" Margin="0,0,0,12">
+                        <local:LabeledControl Grid.Column="0" Label="Shape" Margin="0,0,10,0">
+                            <ComboBox ItemsSource="{Binding MazeShapes}"
+                                      SelectedItem="{Binding MazeShape}"
+                                      HorizontalAlignment="Stretch" />
+                        </local:LabeledControl>
+
+                        <local:LabeledControl Grid.Column="1" Label="Grid Size" Margin="10,0,0,0">
+                            <NumericUpDown Value="{Binding GridSize}"
+                                           Minimum="2"
+                                           Maximum="20"
+                                           HorizontalAlignment="Stretch"
+                                           FormatString="0" />
+                        </local:LabeledControl>
+                    </Grid>
+
+                    <!-- Row 2: Seed settings -->
+                    <Grid ColumnDefinitions="Auto,*">
+                        <CheckBox Grid.Column="0"
+                                  Content="Random Seed"
+                                  IsChecked="{Binding UseRandomSeed}"
+                                  VerticalAlignment="Bottom"
+                                  Margin="0,0,20,0" />
+
+                        <local:LabeledControl Grid.Column="1" Label="Seed">
+                            <NumericUpDown Value="{Binding Seed}"
+                                           Minimum="0"
+                                           Maximum="999999"
+                                           HorizontalAlignment="Stretch"
+                                           IsEnabled="{Binding IsSeedEnabled}"
+                                           FormatString="0" />
+                        </local:LabeledControl>
+                    </Grid>
+
+                    <!-- Row 3: Goal Distance and Dead-End Removal -->
+                    <Grid ColumnDefinitions="*,*" Margin="0,12,0,0">
+                        <local:LabeledControl Grid.Column="0" Label="Goal Distance" Margin="0,0,10,0">
+                            <NumericUpDown Value="{Binding GoalDistance}"
+                                           Minimum="50"
+                                           Maximum="100"
+                                           Increment="5"
+                                           HorizontalAlignment="Stretch"
+                                           FormatString="0'%'" />
+                        </local:LabeledControl>
+
+                        <local:LabeledControl Grid.Column="1" Label="Dead-End Removal" Margin="10,0,0,0">
+                            <NumericUpDown Value="{Binding DeadEndRemoval}"
+                                           Minimum="0"
+                                           Maximum="100"
+                                           Increment="5"
+                                           HorizontalAlignment="Stretch"
+                                           FormatString="0'%'" />
+                        </local:LabeledControl>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Camera Settings Card -->
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock Classes="header" Text="📷 Camera Settings" />
+
+                    <Grid ColumnDefinitions="*,*">
+                        <local:LabeledControl Grid.Column="0" Label="Angle" Margin="0,0,10,0">
+                            <NumericUpDown Value="{Binding CameraAngle}"
+                                           Minimum="30"
+                                           Maximum="90"
+                                           Increment="5"
+                                           HorizontalAlignment="Stretch"
+                                           FormatString="0°" />
+                        </local:LabeledControl>
+
+                        <local:LabeledControl Grid.Column="1" Label="Distance" Margin="10,0,0,0">
+                            <NumericUpDown Value="{Binding CameraDistanceMultiplier}"
+                                           Minimum="0.5"
+                                           Maximum="5"
+                                           Increment="0.1"
+                                           HorizontalAlignment="Stretch"
+                                           FormatString="0.0x" />
+                        </local:LabeledControl>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Action Buttons -->
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,16">
+                <Button Grid.Column="0"
+                        Classes="primary"
+                        Content="🎲 Generate Maze"
+                        Command="{Binding SendMazeSettingsCommand}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Margin="0,0,8,0" />
+
+                <Button Grid.Column="1"
+                        Classes="secondary"
+                        Content="🎯 Calibrate"
+                        Command="{Binding SendCalibrateCommand}"
+                        Padding="20,12"
+                        Margin="0,0,8,0" />
+
+                <Button Grid.Column="2"
+                        Classes="secondary"
+                        Content="🔄 Recenter VR"
+                        Command="{Binding SendRecenterCommand}"
+                        Padding="20,12" />
+            </Grid>
+
+            <!-- Status Bar -->
+            <TextBlock Classes="status"
+                       Text="{Binding StatusText}"
+                       Margin="0,0,0,0" />
+
+        </StackPanel>
+    </ScrollViewer>
+</Window>
